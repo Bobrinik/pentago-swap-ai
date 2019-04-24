@@ -1,10 +1,9 @@
 package student_player;
 
 import boardgame.Move;
-
 import pentago_swap.PentagoPlayer;
-import student_player.MyTools.Node;
 import pentago_swap.PentagoBoardState;
+import pentago_swap.PentagoMove;
 
 /** A player file submitted by a student. */
 public class StudentPlayer extends PentagoPlayer {
@@ -17,26 +16,20 @@ public class StudentPlayer extends PentagoPlayer {
 	public StudentPlayer() {
 		super("260633499");
 	}
-
+	boolean isFirst = true;
 	/**
 	 * This is the primary method that you need to implement. The ``boardState``
 	 * object contains the current state of the game, which your agent must use to
 	 * make decisions.
 	 */
 	public Move chooseMove(PentagoBoardState boardState) {
-		// You probably will make separate functions in MyTools.
-		// For example, maybe you'll need to load some pre-processed best opening
-		// strategies...
-		int turn = boardState.getTurnNumber();
-		System.out.printf("Turn: %d\n", turn);
-	
-		if( turn == 0 || turn == 2) {
-			return MyTools.firstOrSecondMove(boardState);
+		if(isFirst) {
+			isFirst = false;
+			return MyTools.opening(boardState);
 		} 
 		else {
-			int depth = turn < 9 ? 2 : 4;
-			Node node = MyTools.a_b(boardState, new Node(Integer.MAX_VALUE, -Integer.MAX_VALUE, null),  depth, true);
-			return node.move;
+			PentagoMove move = MyTools.findMoveFor(boardState, System.currentTimeMillis());
+			return move;
 		}
 	}
 }

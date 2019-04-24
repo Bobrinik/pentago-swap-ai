@@ -1,6 +1,9 @@
 package student_player;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -16,179 +19,26 @@ import pentago_swap.PentagoMove;
 public class MyTools {
 
 	private static final int MY_WIN = 5;
-	private static final int OPPONENT_WIN = -5;
 	private static final int DRAW = 0;
+	private static final int OPPONENT_WIN = -5;
+
 	
 	private static final int WHITE = 0;
 	private static final int BLACK = 1;
-	private static final int EMPTY = 1;
 	
-	private static String regex_black = "(0+)";
-	private static String regex_white = "(1+)";
-	private static String regex_empty = "(2+)";
+	private static String regex_black = "(b+)";
+	private static String regex_white = "(w+)";
 
 	private static Pattern pattern_black = Pattern.compile(regex_black);
 	private static Pattern pattern_white = Pattern.compile(regex_white);
-	private static Pattern pattern_empty = Pattern.compile(regex_empty);
+
 	
 
-	public static HashMap<String, Integer> f_cache = new HashMap<>();
-
-	public static String toString(PentagoBoardState board) {
-		StringBuilder builder = new StringBuilder();
-
-		for (int y = 0; y < 6; y++) {
-			for (int x = 0; x < 6; x++) {
-				builder.append(Integer.toString(board.getPieceAt(x, y).ordinal()) + ",");
-			}
-		}
-
-		return builder.toString();
-	}
-
-	public static int[][] getRowCounts(PentagoBoardState board) {
-		int[][] result = new int[3][6];
-
-		for (int xPos = 0; xPos < 6; xPos++) {
-			for (int yPos = 0; yPos < 6; yPos++) {
-				switch (board.getPieceAt(xPos, yPos)) {
-				case WHITE:
-					result[0][xPos]++;
-					break;
-				case BLACK:
-					result[1][xPos]++;
-					break;
-				case EMPTY:
-					result[2][xPos]++;
-					break;
-				}
-			}
-		}
-		return result;
-	}
-
-	public static int[][] getColumntCounts(PentagoBoardState board) {
-		int[][] result = new int[3][6];
-
-		for (int yPos = 0; yPos < 6; yPos++) {
-			for (int xPos = 0; xPos < 6; xPos++) {
-				switch (board.getPieceAt(xPos, yPos)) {
-				case WHITE:
-					result[0][yPos]++;
-					break;
-				case BLACK:
-					result[1][yPos]++;
-					break;
-				case EMPTY:
-					result[2][yPos]++;
-					break;
-				}
-			}
-		}
-		return result;
-	}
-
-	public static int[][] getLtoRDiagonalCounts(PentagoBoardState board) {
-		int[][] result = new int[3][3];
-
-		for (int xPos = 0, yPos = 1; yPos < 6 && xPos < 6; yPos++, xPos++) {
-			switch (board.getPieceAt(xPos, yPos)) {
-			case WHITE:
-				result[0][0]++;
-				break;
-			case BLACK:
-				result[1][0]++;
-				break;
-			case EMPTY:
-				result[2][0]++;
-				break;
-			}
-		}
-
-		for (int xPos = 0, yPos = 0; yPos < 6 && xPos < 6; yPos++, xPos++) {
-			switch (board.getPieceAt(xPos, yPos)) {
-			case WHITE:
-				result[0][1]++;
-				break;
-			case BLACK:
-				result[1][1]++;
-				break;
-			case EMPTY:
-				result[2][1]++;
-				break;
-			}
-		}
-
-		for (int xPos = 1, yPos = 0; yPos < 6 && xPos < 6; yPos++, xPos++) {
-			switch (board.getPieceAt(xPos, yPos)) {
-			case WHITE:
-				result[0][2]++;
-				break;
-			case BLACK:
-				result[1][2]++;
-				break;
-			case EMPTY:
-				result[2][2]++;
-				break;
-			}
-		}
-
-		return result;
-	}
-
-	public static int[][] getRtoLDiagonalCounts(PentagoBoardState board) {
-		int[][] result = new int[3][3];
-
-		for (int xPos = 5, yPos = 1; yPos < 6 && xPos >= 0; yPos++, xPos--) {
-			switch (board.getPieceAt(xPos, yPos)) {
-			case WHITE:
-				result[0][0]++;
-				break;
-			case BLACK:
-				result[1][0]++;
-				break;
-			case EMPTY:
-				result[2][0]++;
-				break;
-			}
-		}
-
-		for (int xPos = 5, yPos = 0; yPos < 6 && xPos >= 0; yPos++, xPos--) {
-			switch (board.getPieceAt(xPos, yPos)) {
-			case WHITE:
-				result[0][1]++;
-				break;
-			case BLACK:
-				result[1][1]++;
-				break;
-			case EMPTY:
-				result[2][1]++;
-				break;
-			}
-		}
-
-		for (int xPos = 4, yPos = 0; yPos < 6 && xPos >= 0; yPos++, xPos--) {
-			switch (board.getPieceAt(xPos, yPos)) {
-			case WHITE:
-				result[0][2]++;
-				break;
-			case BLACK:
-				result[1][2]++;
-				break;
-			case EMPTY:
-				result[2][2]++;
-				break;
-			}
-		}
-
-		return result;
-	}
-
+	public static HashMap<String, int[]> f_cache = new HashMap<>();
 
 	public static int[] getLongestSequence(String search) {		
 		ArrayList<Integer> black_match = new ArrayList<Integer>();
 		ArrayList<Integer> white_match = new ArrayList<Integer>();
-		ArrayList<Integer> empty_match = new ArrayList<Integer>();
 		
 		Matcher m = pattern_black.matcher(search);
 		while (m.find()) {
@@ -200,35 +50,28 @@ public class MyTools {
 			white_match.add(m.group().length());
 		}
 		
-		m = pattern_empty.matcher(search);
-		while (m.find()) {
-			empty_match.add(m.group().length());
-		}
 
-		int[] result = {getMax(white_match), getMax(black_match), getMax(empty_match)};
+		int[] result = {getMax(white_match), getMax(black_match)};
 		
 		return result;
 	}
 	
 	// {row: [white_longest_match, balck_longest_match, empty_longest_match]}
-	// it should return longest consecutive for all rows
 	public static int[] getLongesConsecutiveInRow(PentagoBoardState board) {
 		int[] row_white = new int[6];
 		int[] row_black = new int[6];
-		int[] row_empty = new int[6];
 		
 		for (int xPos = 0; xPos < 6; xPos++) {
 			StringBuilder str = new StringBuilder();
 			for (int yPos = 0; yPos < 6; yPos++) {
-				str.append(board.getPieceAt(xPos, yPos).ordinal()); // longest match of 1ns and 0s
+				str.append(board.getPieceAt(xPos, yPos)); // longest match of 1ns and 0s
 			}
 			int[] temp = getLongestSequence(str.toString());
 			row_white[xPos] = temp[WHITE];
 			row_black[xPos] = temp[BLACK];
-			row_empty[xPos] = temp[EMPTY];
 		}
 		
-		int[] result = {getMax(row_white), getMax(row_black), getMax(row_empty)};
+		int[] result = {getMax(row_white), getMax(row_black)};
 		return result;
 	}
 	
@@ -240,13 +83,12 @@ public class MyTools {
 		for (int yPos = 0; yPos < 6; yPos++) {
 			StringBuilder str = new StringBuilder();
 			for (int xPos = 0; xPos < 6; xPos++) {
-				str.append(board.getPieceAt(xPos, yPos).ordinal()); // longest match of 1ns and 0s
+				str.append(board.getPieceAt(xPos, yPos)); // longest match of 1ns and 0s
 			}
 			
 			int[] temp = getLongestSequence(str.toString());
 			row_white[yPos] = temp[WHITE];
 			row_black[yPos] = temp[BLACK];
-			row_empty[yPos] = temp[EMPTY];
 		}
 		
 		int[] result = {getMax(row_white), getMax(row_black), getMax(row_empty)};
@@ -254,81 +96,52 @@ public class MyTools {
 	}
 	
 	public static int[] getLongestConsecutiveLToR(PentagoBoardState board) {
-		int[] diag_white = new int[3];
-		int[] diag_black = new int[3];
-		int[] diag_empty = new int[3];
+		int[] diag_white = new int[12];
+		int[] diag_black = new int[12];
 		
-		StringBuilder str_1 = new StringBuilder();
-		for (int xPos = 0, yPos = 0; xPos < 6 && yPos < 6; yPos++, xPos++) {
-				str_1.append(board.getPieceAt(xPos, yPos).ordinal());
-		}
-		
-		StringBuilder str_2 = new StringBuilder();
-		for (int xPos = 0, yPos = 1; xPos < 6 && yPos < 6; yPos++, xPos++) {
-			str_2.append(board.getPieceAt(xPos, yPos).ordinal());
-		}
-
-		StringBuilder str_3 = new StringBuilder();
-		for (int xPos = 0, yPos = 1; xPos < 6 && yPos < 6; yPos++, xPos++) {
-			str_3.append(board.getPieceAt(xPos, yPos).ordinal());
-		}
-		
-		int[] temp = getLongestSequence(str_1.toString());
-		diag_white[0] = temp[WHITE];
-		diag_black[0] = temp[BLACK];
-		diag_empty[0] = temp[EMPTY];
-
-		temp = getLongestSequence(str_2.toString());
-		diag_white[1] = temp[WHITE];
-		diag_black[1] = temp[BLACK];
-		diag_empty[1] = temp[EMPTY];
-
-		temp = getLongestSequence(str_3.toString());
-		diag_white[2] = temp[WHITE];
-		diag_black[2] = temp[BLACK];
-		diag_empty[2] = temp[EMPTY];
-		
-		int[] result = {getMax(diag_white), getMax(diag_black), getMax(diag_empty)};
+		int idx = 0;
+		int dim = 6;
+	    for( int k = 0 ; k < dim * 2 ; k++ ) {
+	    	StringBuilder str = new StringBuilder();
+	        for( int yPos = 0 ; yPos <= k ; yPos++ ) {
+	            int xPos = k - yPos;
+	            if( xPos < dim && yPos < dim ) {
+	                str.append(board.getPieceAt(xPos, yPos));
+	            }
+	        }
+	        
+			int[] temp = getLongestSequence(str.toString());
+			diag_white[idx] = temp[WHITE];
+			diag_black[idx] = temp[BLACK];
+			idx++;
+	    }
+				
+		int[] result = {getMax(diag_white), getMax(diag_black)};
 		return result;
 	}
 	
 	
 	public static int[] getLongestConsecutiveRToL(PentagoBoardState board) {
-		int[] diag_white = new int[3];
-		int[] diag_black = new int[3];
-		int[] diag_empty = new int[3];
-		
-		StringBuilder str_1 = new StringBuilder();
-		for (int xPos = 5, yPos = 0; xPos >= 0 && yPos < 6; yPos++, xPos--) {
-				str_1.append(board.getPieceAt(xPos, yPos).ordinal());
-		}
-		
-		StringBuilder str_2 = new StringBuilder();
-		for (int xPos = 5, yPos = 1; xPos >= 0 && yPos < 6; yPos++, xPos--) {
-			str_2.append(board.getPieceAt(xPos, yPos).ordinal());
+		int[] diag_white = new int[12];
+		int[] diag_black = new int[12];
+
+		int idx = 0;
+		int dim = 6;
+		for (int k = (dim - 1) * 2; k >= 0; k--) {
+			StringBuilder str = new StringBuilder();
+			for (int j = k; j >= 0; j--) {
+				int i = k - j;
+				if (i < dim && j < dim) {
+					str.append(board.getPieceAt(j, i));
+				}
+			}
+			int[] temp = getLongestSequence(str.toString());
+			diag_white[idx] = temp[WHITE];
+			diag_black[idx] = temp[BLACK];
+			idx++;
 		}
 
-		StringBuilder str_3 = new StringBuilder();
-		for (int xPos = 4, yPos = 1; xPos >= 0 && yPos < 6; yPos++, xPos--) {
-			str_3.append(board.getPieceAt(xPos, yPos).ordinal());
-		}
-		
-		int[] temp = getLongestSequence(str_1.toString());
-		diag_white[0] = temp[WHITE];
-		diag_black[0] = temp[BLACK];
-		diag_empty[0] = temp[EMPTY];
-
-		temp = getLongestSequence(str_2.toString());
-		diag_white[1] = temp[WHITE];
-		diag_black[1] = temp[BLACK];
-		diag_empty[1] = temp[EMPTY];
-
-		temp = getLongestSequence(str_3.toString());
-		diag_white[2] = temp[BLACK];
-		diag_black[2] = temp[WHITE];
-		diag_empty[2] = temp[EMPTY];
-		
-		int[] result = {getMax(diag_white), getMax(diag_black), getMax(diag_empty)};
+		int[] result = { getMax(diag_white), getMax(diag_black) };
 		return result;
 	}
 	
@@ -355,120 +168,237 @@ public class MyTools {
 		return t;
 	}
 	
-	public static int[] compute(PentagoBoardState board) {
-		int[][] rows = getRowCounts(board);
-		int[][] columns = getRowCounts(board);
-		int[][] lToR = getLtoRDiagonalCounts(board);
-		int[][] rToL = getRtoLDiagonalCounts(board);
-
-		int[] maxWhite = { getMax(rows[WHITE]), getMax(columns[WHITE]), getMax(lToR[WHITE]), getMax(rToL[WHITE]) };
-		int[] maxBlack = { getMax(rows[BLACK]), getMax(columns[BLACK]), getMax(lToR[BLACK]), getMax(rToL[BLACK]) };
-
-		int[] result = { getMax(maxWhite), getMax(maxBlack) };
-
-		return result;
-	}
-
 	public static int[] computeConsecutive(PentagoBoardState board) {
 
 		int[] row    = getLongesConsecutiveInRow(board);
 		int[] column = getLongesConsecutiveInColumn(board);
+		
 		int[] lToR   = getLongestConsecutiveLToR(board);
+		
 		int[] rToL   = getLongestConsecutiveRToL(board);
 		
 		int[] white = {row[WHITE], column[WHITE], lToR[WHITE], rToL[WHITE]};
 		int[] black = {row[BLACK], column[BLACK], lToR[BLACK], rToL[BLACK]};
-		int[] empty = {row[EMPTY], column[EMPTY], lToR[EMPTY], rToL[EMPTY]};
 		
-		int[] result = {getMax(white), getMax(black), getMax(empty)};
+		int[] result = {getMax(white), getMax(black)};
 		
 		return result;
 	}
 
 	public static int memoize_f(PentagoBoardState board, boolean isMax) {
-		String hash = toString(board);
-
-		if (f_cache.containsKey(hash))
-			return f_cache.get(toString(board));
-
-		int result = eval_F(board, isMax);
-
-		f_cache.put(hash, result);
-
-		return result;
-	}
-
-	public static int eval_F(PentagoBoardState board, boolean isMax) {
 		if (board.gameOver()) {
 			if (board.getWinner() == Board.DRAW)
 				return DRAW;
 
 			return isMax ? MY_WIN : OPPONENT_WIN;
 		}
+
+		String hash = toString(board);
+
+		int[] result;
+		if (f_cache.containsKey(hash)) {
+			result = f_cache.get(hash);
+//			if(writer != null)
+//				writer.println(hash+"<-->"+result[0]+","+result[1]);		
+		} else {
+			result = computeConsecutive(board);
+		}
+
+		f_cache.put(hash, result);
+
+		return result[board.getTurnPlayer()] - result[board.getOpponent()];
+	}
+
+	public static int memoize_f_2(PentagoBoardState board, boolean isMax) {
+		if (board.gameOver()) {
+			if (board.getWinner() == Board.DRAW)
+				return DRAW;
+
+			return isMax ? MY_WIN : OPPONENT_WIN;
+		}
+
+		String hash = toString(board);
+
+		int[] result;
+		if (f_cache.containsKey(hash)) {
+			result = f_cache.get(hash);
+		} else {
+			result = computeConsecutive(board);
+		}
+
+		f_cache.put(hash, result);
 		
-		int[] result = computeConsecutive(board);
+		System.out.println(Arrays.toString(result));
 
-		if (board.getTurnPlayer() == WHITE)
-			return result[WHITE] - result[BLACK];
-		else
-			return result[BLACK] - result[WHITE];
+		return result[board.getTurnPlayer()] - result[board.getOpponent()];
 	}
+	public static List<Node> orderMoves(PentagoBoardState board, boolean isMax){
+		ArrayList<Node> my_nodes = new ArrayList<>();
 
-	/* =================================== */
+		for(PentagoMove mv :board.getAllLegalMoves()) {
+			PentagoBoardState tmp = (PentagoBoardState) board.clone();
+			tmp.processMove(mv);
 
-	static class Node {
-		int alpha;
-		int beta;
-		PentagoMove move;
-
-		Node(int alpha, int beta, PentagoMove move) {
-			this.alpha = alpha;
-			this.beta = beta;
-			this.move = move;
-		}
-	}
-
-	public static Node a_b(PentagoBoardState board, Node prevNode, int depth, boolean isMax) {
-
-		if (depth == 0 || board.gameOver()) {
-			int r = memoize_f(board, isMax);
-			return isMax ? new Node(r, prevNode.beta, prevNode.move) : new Node(prevNode.alpha, r, prevNode.move);
-		}
-
-		Node result = null, current = null;
-
-		for (PentagoMove m : board.getAllLegalMoves()) {
-
-			PentagoBoardState tmpBoard = (PentagoBoardState) board.clone();
-
-			tmpBoard.processMove(m);
-
-			current = a_b(tmpBoard, prevNode, depth - 1, !isMax);
-			current.move = m;
-
-			if (isMax && current.alpha == MY_WIN)
-				return current;
-			else if (!isMax && current.beta == OPPONENT_WIN)
-				return current;
-
-			if (result == null)
-				result = current;
+			Node my_node;
+			
+			if(isMax) {
+				my_node = new Node(memoize_f(tmp, isMax), Integer.MAX_VALUE, mv, tmp);
+			}
 			else {
+				my_node = new Node(-Integer.MAX_VALUE, memoize_f(tmp, isMax), mv, tmp);
+			}
 
-				if (isMax) {
-					result = result.alpha < current.alpha ? current : result;
+			my_nodes.add(my_node);
+		}
+		
+		Collections.sort(my_nodes, new Comparator<Node>(){
+		       public int compare(Node o1, Node o2) {
+		    	   if(isMax) {
+		    		   if(o1.bestMax < o2.bestMax) return 1;
+		    		   else if(o1.bestMax > o2.bestMax) return -1;
+		    		   return 0;
+		    	   }
+		    	   else {
+		    		   if(o1.bestMin > o2.bestMin) return 1;
+		    		   else if(o1.bestMin < o2.bestMin) return -1;
+		    		   return 0;
+		    	   }
+		        }
+		    });
+		int end = 0;
+		if(isMax) {
+			int max = my_nodes.get(0).bestMax;
 
-				} else {
-					result = result.beta > current.beta ? current : result;
-				}
+			for(Node m : my_nodes) {
+				if(max != m.bestMax) break;
+				end++;
+			}
+		}
+		else {
+			int min = my_nodes.get(0).bestMin;
+			for(Node m : my_nodes) {
+				if(min != m.bestMin) break;
+				end++;
 			}
 		}
 
-		return result;
+		return my_nodes.subList(0, end);
+	}
+	
+	public static String toString(PentagoBoardState board) {
+		StringBuilder str = new StringBuilder();
+		for(int i = 0; i < 6; i++) {
+			for(int j = 0; j < 6; j++) {
+				switch(board.getPieceAt(i, j)) {
+				case WHITE:
+					str.append("[x]");
+					break;
+				case BLACK:
+					str.append("[o]");
+					break;
+				case EMPTY:
+					str.append("[ ]");
+					break;
+				}
+			}
+			str.append("\n");
+		}
+		return str.toString();
+	}
+	
+	public static String toString(ArrayList<Node> res, boolean IsMax) {
+		StringBuilder str = new StringBuilder();
+		
+		for(Node m : res) {
+			if(IsMax)str.append(m.bestMax);
+			else str.append(m.bestMin);
+			str.append(",");
+		}
+		
+		return str.toString();
+	}
+	/* =================================== */
+
+	static class Node {
+		int bestMax;
+		int bestMin;
+		PentagoMove move;
+		PentagoBoardState node_board;
+
+		Node(int bestMax, int bestMin, PentagoMove move, PentagoBoardState node_board) {
+			this.bestMax = bestMax;
+			this.bestMin = bestMin;
+			this.move = move;
+			this.node_board = node_board;
+		}
+	}
+
+
+	public static boolean isTimeout(long start_time) {
+		long time_passed = 	System.currentTimeMillis() - start_time;
+		
+		if(time_passed > 1800)	{
+			return true;
+		}
+		return false;
+	}
+
+	
+	public static PentagoMove findMoveFor(PentagoBoardState current_board, long start_time) {
+		int a = -Integer.MAX_VALUE;
+		int b =  Integer.MAX_VALUE;
+		int value = a;
+		int depth = 5;
+		Node best = null;
+
+		for (Node current_node : orderMoves(current_board, false)) {
+			
+			value = alpha_beta(current_node.node_board, a, b, depth, true, start_time);
+			current_node.bestMax = value;
+			
+			if(best == null) best = current_node;
+			
+			if(best.bestMax < current_node.bestMax) {
+				best = current_node;
+			}
+				
+			if(isTimeout(start_time)) {
+				return best.move;
+			}
+		}
+
+		return best.move;
+	}
+	
+	
+	public static int alpha_beta(PentagoBoardState current_board, int a, int b, int depth, boolean isMax, long start_time) {
+		if (depth == 0 || current_board.gameOver()) return memoize_f(current_board, isMax);
+
+		if (isMax) {
+			int value = -Integer.MAX_VALUE;
+
+			for (Node current_node : orderMoves(current_board, isMax)) {
+				value = alpha_beta(current_node.node_board, a, b, depth-1, !isMax, start_time);
+				a = Math.max(a, value);
+				if(a >= b) break;
+				if(isTimeout(start_time)) return value;
+			}
+			return value;
+		} else {
+			int value = Integer.MAX_VALUE;
+
+			for (Node current_node : orderMoves(current_board, isMax)) {
+				value = alpha_beta(current_node.node_board, a, b, depth-1, !isMax, start_time);
+				b = Math.min(b, value);
+				if(a >= b) break;
+				if(isTimeout(start_time)) return value;
+			}
+			return value;
+		}
 	}
 
 	/* ============== OPENING ===================== */
-	public static Move firstOrSecondMove(PentagoBoardState board) {
+	public static Move opening(PentagoBoardState board) {
 		// these center points give strategic advantage.
 		int[][] center_points = { { 1, 1 }, { 1, 4 }, { 4, 1 }, { 4, 4 } };
 		for (int[] p : center_points) {
